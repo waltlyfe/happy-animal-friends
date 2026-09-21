@@ -35,11 +35,29 @@ function speak(text) {
 
 function speakAnimal(animal) { speak(`${animal.name}. ${animal.phrase} ${animal.fact}`); }
 
+function playAnimalSound(animal) {
+  if (!state.soundOn) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) { speak(animal.phrase); return; }
+  const ctx = new Ctx(), now = ctx.currentTime;
+  const osc=(type,start,duration,from,to,volume=.12)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(from,start);o.frequency.exponentialRampToValueAtTime(Math.max(40,to),start+duration);g.gain.setValueAtTime(volume,start);g.gain.exponentialRampToValueAtTime(.001,start+duration);o.connect(g);g.connect(ctx.destination);o.start(start);o.stop(start+duration+.03)};
+  const noise=(start,duration,volume=.06)=>{const b=ctx.createBuffer(1,ctx.sampleRate*duration,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=b;g.gain.value=volume;s.connect(g);g.connect(ctx.destination);s.start(start);s.stop(start+duration)};
+  const p={woof:()=>{osc('sawtooth',now,.16,180,80,.18);osc('sawtooth',now+.2,.16,150,70,.18)},meow:()=>osc('sine',now,.5,420,900,.15),moo:()=>osc('sawtooth',now,.75,110,70,.2),oink:()=>{osc('square',now,.18,260,180);osc('square',now+.22,.18,300,190)},baa:()=>osc('sawtooth',now,.55,260,170),neigh:()=>osc('sawtooth',now,.65,380,900),cluck:()=>{osc('square',now,.12,500,280);osc('square',now+.15,.12,620,300)},quack:()=>{osc('square',now,.18,320,170,.15);osc('square',now+.22,.18,320,160,.15)},roar:()=>{noise(now,.5,.08);osc('sawtooth',now,.7,90,45,.2)},trumpet:()=>osc('sawtooth',now,.65,220,650),ooh:()=>osc('sine',now,.7,300,500),ribbit:()=>{osc('square',now,.16,170,80);osc('square',now+.22,.16,150,70)},grr:()=>{noise(now,.45,.09);osc('sawtooth',now,.5,100,55,.16)},yip:()=>osc('square',now,.2,520,780),squeak:()=>osc('sine',now,.22,700,1100),honk:()=>osc('sawtooth',now,.3,240,120),hum:()=>osc('sine',now,.7,180,210),huff:()=>noise(now,.25,.07),grunt:()=>osc('sawtooth',now,.35,130,80),hoot:()=>{osc('sine',now,.35,280,190);osc('sine',now+.4,.35,260,180)},click:()=>{osc('square',now,.05,1200,1200,.08);osc('square',now+.1,.05,1500,1500,.08)},hello:()=>osc('sine',now,.4,300,450),buzz:()=>osc('sawtooth',now,.7,120,135,.06)};
+  (p[animal.sound]||p.hello)(); setTimeout(()=>ctx.close(),1000);
+}
+const alphabet=[['A','Alligator','🐊'],['B','Bear','🐻'],['C','Cat','🐱'],['D','Dog','🐶'],['E','Elephant','🐘'],['F','Frog','🐸'],['G','Giraffe','🦒'],['H','Horse','🐴'],['I','Iguana','🦎'],['J','Jaguar','🐆'],['K','Koala','🐨'],['L','Lion','🦁'],['M','Monkey','🐵'],['N','Narwhal','🦄'],['O','Owl','🦉'],['P','Panda','🐼'],['Q','Quail','🐦'],['R','Rabbit','🐰'],['S','Sheep','🐑'],['T','Tiger','🐯'],['U','Unicorn','🦄'],['V','Vulture','🦅'],['W','Whale','🐋'],['X','X-ray fish','🐟'],['Y','Yak','🐂'],['Z','Zebra','🦓']];
+const songs=[{title:'Hello, Animal Friends!',emoji:'🌈',lines:['Hello, hello, animal friends!','Clap your hands and stomp your feet!','Dog says woof and cow says moo!','We love learning, me and you!']},{title:'The Farmyard Song',emoji:'🚜',lines:['Down on the farm we sing today!','Pig says oink and sheep says baa!','Chicken clucks and horses neigh!','Happy animal friends shout hooray!']},{title:'ABC Animal Parade',emoji:'🔤',lines:['A is for alligator, B is for bear!','C is for cat with whiskers to share!','D is for dog and E elephant too!','Learning our letters is fun to do!']}];
+function alphabetView(){const cards=alphabet.map(([l,n,e],i)=>`<button class="letter-card" data-letter="${i}"><b>${l}</b><span>${e}</span><strong>${n}</strong><small>Tap to hear</small></button>`).join('');return `${nav()}<section class="games-page"><div class="page-heading"><span>🔤</span><div><p class="eyebrow">Early letters</p><h1>ABC Animal Friends</h1><p>Learn each letter with a friendly animal.</p></div></div><div class="alphabet-grid">${cards}</div></section>`}
+function countingView(){const target=state.countingTarget,animal=animals[(target+3)%animals.length];return `${nav()}<section class="mini-game"><button class="back" data-view="games">← Games</button><div class="game-box"><p class="eyebrow">Numbers 1–10</p><h1>Count & Tap!</h1><p class="count-sub">How many ${animal.name}s can you count?</p><div class="count-row big-count">${Array.from({length:target},(_,i)=>`<button class="count-object" data-count-object="${i}">${animal.emoji}</button>`).join('')}</div><div class="number-choices">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-count="${n}">${n}</button>`).join('')}</div><div id="count-feedback" class="feedback">${state.countAnswer||''}</div><button class="primary small" data-new-count>New number →</button></div></section>`}
+function songsView(){return `${nav()}<section class="games-page"><div class="page-heading"><span>🎵</span><div><p class="eyebrow">Sing & learn</p><h1>Animal Songs</h1><p>Original little songs made for our animal friends.</p></div></div><div class="song-grid">${songs.map((s,i)=>`<article class="song-card"><span class="song-emoji">${s.emoji}</span><h2>${s.title}</h2><p>${s.lines.join(' ')}</p><button class="primary" data-song="${i}">▶ Sing with me</button></article>`).join('')}</div><div class="game-tip">🎤 <b>Tip:</b> Sing the last word of each line together with your grown-up.</div></section>`}
+
 function nav() {
   return `<header class="topbar">
     <button class="brand" data-view="home" aria-label="Go home"><span>🌈</span> Happy Animal Friends</button>
     <nav aria-label="Main navigation">
       <button data-view="learn">🐾 Learn</button>
+      <button data-view="songs">🎵 Songs</button>
+      <button data-view="abc">🔤 ABC</button>
       <button data-view="games">🎮 Games</button>
       <button data-view="quiz">⭐ Quiz</button>
       <button class="sound-toggle" data-toggle-sound aria-label="Toggle voice">${state.soundOn ? '🔊' : '🔇'}</button>
@@ -68,7 +86,7 @@ function home() {
       <div class="activity-grid">
         <button class="activity learn-card" data-view="learn"><span class="activity-emoji">🐮</span><strong>Meet the Animals</strong><small>Discover 24 animal friends!</small><b>Let's go →</b></button>
         <button class="activity quiz-card" data-view="quiz"><span class="activity-emoji">🦁</span><strong>Guess the Animal</strong><small>Can you find the right friend?</small><b>Play now →</b></button>
-        <button class="activity game-card" data-view="games"><span class="activity-emoji">🎮</span><strong>Play & Count</strong><small>Try fun learning games!</small><b>Let's play →</b></button>
+        <button class="activity game-card" data-view="games"><span class="activity-emoji">🎮</span><strong>Play & Count</strong><small>Try fun learning games!</small><b>Let's play →</b></button><button class="activity song-card-home" data-view="songs"><span class="activity-emoji">🎵</span><strong>Sing Animal Songs</strong><small>Clap, sing, and learn!</small><b>Sing now →</b></button><button class="activity abc-card-home" data-view="abc"><span class="activity-emoji">🔤</span><strong>ABC Animal Friends</strong><small>Learn A to Z with animals!</small><b>Learn letters →</b></button>
       </div>
     </section>`;
 }
@@ -121,7 +139,7 @@ function games() {
   return `${nav()}<section class="games-page">
     <div class="page-heading"><span>🎮</span><div><p class="eyebrow">Learning games</p><h1>Play & Learn</h1><p>Have fun while you practice animal skills.</p></div></div>
     <div class="game-menu">
-      <button class="game-tile" data-game="count"><span>🔢</span><strong>Count the Animals</strong><small>Practice counting from 1 to 10</small></button>
+      <button class="game-tile" data-game="count"><span>🔢</span><strong>Count the Animals</strong><small>Practice counting from 1 to 10</small></button><button class="game-tile" data-view="counting"><span>🔢</span><strong>Count & Tap</strong><small>Choose the number you see</small></button><button class="game-tile" data-view="abc"><span>🔤</span><strong>ABC Animal Friends</strong><small>Learn A to Z</small></button><button class="game-tile" data-view="songs"><span>🎵</span><strong>Animal Songs</strong><small>Sing along and learn</small></button>
       <button class="game-tile" data-game="memory"><span>🧠</span><strong>Animal Memory</strong><small>Match the animal friends</small></button>
       <button class="game-tile" data-view="quiz"><span>⭐</span><strong>Guess the Animal</strong><small>Test what you know</small></button>
     </div>
@@ -165,7 +183,10 @@ function render() {
     state.view === 'detail' ? animalDetail() :
     state.view === 'quiz' ? quiz() :
     state.view === 'games' ? games() :
-    state.view === 'count' ? countGame() : memory();
+    state.view === 'count' ? countGame() :
+    state.view === 'counting' ? countingView() :
+    state.view === 'abc' ? alphabetView() :
+    state.view === 'songs' ? songsView() : memory();
 }
 
 function go(view) {
@@ -185,7 +206,11 @@ app.addEventListener('click', event => {
     state.animalIndex = +target.dataset.animal; state.view = 'detail'; render();
     setTimeout(() => speakAnimal(animals[state.animalIndex]), 250); return;
   }
-  if (target.dataset.sound !== undefined) { speakAnimal(animals[state.animalIndex]); return; }
+  if (target.dataset.sound !== undefined) { playAnimalSound(animals[state.animalIndex]); speakAnimal(animals[state.animalIndex]); return; }
+  if (target.dataset.letter !== undefined) { const [letter,name]=alphabet[+target.dataset.letter]; speak(letter + '. ' + name + '.'); return; }
+  if (target.dataset.song !== undefined) { const song=songs[+target.dataset.song]; song.lines.forEach((line,i)=>setTimeout(()=>speak(line),i*2600)); burst(); return; }
+  if (target.dataset.countObject !== undefined) { speak(String(+target.dataset.countObject+1)); return; }
+  if (target.dataset.newCount !== undefined) { state.countingTarget=1+Math.floor(Math.random()*10); state.countAnswer=null; render(); return; }
   if (target.dataset.next !== undefined) {
     state.animalIndex = (state.animalIndex + 1) % animals.length; render();
     setTimeout(() => speakAnimal(animals[state.animalIndex]), 150); return;
