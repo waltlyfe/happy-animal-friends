@@ -24,16 +24,69 @@ function burst() {
   setTimeout(() => confetti.remove(), 1000);
 }
 
-function speak(text) {
-  if (!state.soundOn || !('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const voice = new SpeechSynthesisUtterance(text);
-  voice.rate = 0.78;
-  voice.pitch = 1.18;
-  speechSynthesis.speak(voice);
+const PLAYFUL_VOICE_KEYWORDS = [
+  'samantha', 'ava', 'allison', 'aria', 'jenny', 'serena', 'susan', 'zira',
+  'hazel', 'siri', 'female', 'woman', 'english', 'natural', 'neural'
+];
+let preferredVoice = null;
+let speechTimer = null;
+
+function choosePlayfulVoice() {
+  if (!('speechSynthesis' in window)) return null;
+  const englishVoices = speechSynthesis.getVoices().filter(voice => /^en([_-]|$)/i.test(voice.lang));
+  const voices = englishVoices.length ? englishVoices : speechSynthesis.getVoices();
+  preferredVoice = voices.sort((a, b) => {
+    const score = voice => PLAYFUL_VOICE_KEYWORDS.reduce((total, word, index) =>
+      total + (voice.name.toLowerCase().includes(word) ? PLAYFUL_VOICE_KEYWORDS.length - index : 0), 0);
+    return score(b) - score(a) || Number(b.localService) - Number(a.localService);
+  })[0] || null;
+  return preferredVoice;
 }
 
-function speakAnimal(animal) { speak(`${animal.name}. ${animal.phrase} ${animal.fact}`); }
+function stopSpeaking() {
+  clearTimeout(speechTimer);
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function speak(text, { interrupt = true, onend } = {}) {
+  if (!state.soundOn || !('speechSynthesis' in window)) return;
+  if (interrupt) stopSpeaking();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.voice = preferredVoice || choosePlayfulVoice();
+  utterance.rate = 0.82;
+  utterance.pitch = 1.2;
+  utterance.volume = 1;
+  if (onend) utterance.onend = onend;
+  speechSynthesis.speak(utterance);
+}
+
+function speakWithPauses(lines, pause = 350) {
+  if (!state.soundOn || !('speechSynthesis' in window)) return;
+  stopSpeaking();
+  const sayNext = index => {
+    if (!state.soundOn || index >= lines.length) return;
+    speak(lines[index], {
+      interrupt: false,
+      onend: () => { speechTimer = setTimeout(() => sayNext(index + 1), pause); }
+    });
+  };
+  sayNext(0);
+}
+
+function introduceAnimal(animal) {
+  if (!state.soundOn) return;
+  stopSpeaking();
+  const canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+  // Start the animal sound separately so it is never blocked by unavailable or stalled speech.
+  if (canSpeak) speak(`Wow! It is a ${animal.name}!`, { interrupt: false });
+  playAnimalSound(animal);
+
+  if (canSpeak) {
+    speechTimer = setTimeout(() => speak(animal.fact, { interrupt: false }), 950);
+  }
+}
+
 
 function playToneSequence(notes, duration = 0.11) {
   if (!state.soundOn) return;
@@ -64,7 +117,7 @@ function playGameSound(kind) {
 function playAnimalSound(animal) {
   if (!state.soundOn) return;
   const Ctx = window.AudioContext || window.webkitAudioContext;
-  if (!Ctx) { speak(animal.phrase); return; }
+  if (!Ctx) { speak(animal.phrase, { interrupt: false }); return; }
   const ctx = new Ctx(), now = ctx.currentTime;
   const osc=(type,start,duration,from,to,volume=.12)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(from,start);o.frequency.exponentialRampToValueAtTime(Math.max(40,to),start+duration);g.gain.setValueAtTime(volume,start);g.gain.exponentialRampToValueAtTime(.001,start+duration);o.connect(g);g.connect(ctx.destination);o.start(start);o.stop(start+duration+.03)};
   const noise=(start,duration,volume=.06)=>{const b=ctx.createBuffer(1,ctx.sampleRate*duration,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=b;g.gain.value=volume;s.connect(g);g.connect(ctx.destination);s.start(start);s.stop(start+duration)};
@@ -226,24 +279,24 @@ app.addEventListener('click', event => {
   if (!target) return;
 
   if (target.dataset.view) { go(target.dataset.view); return; }
-  if (target.dataset.toggleSound !== undefined) { state.soundOn = !state.soundOn; render(); return; }
+  if (target.dataset.toggleSound !== undefined) { state.soundOn = !state.soundOn; if (!state.soundOn) stopSpeaking(); render(); return; }
 
   if (target.dataset.animal !== undefined) {
     state.animalIndex = +target.dataset.animal; state.view = 'detail'; render();
-    setTimeout(() => speakAnimal(animals[state.animalIndex]), 250); return;
+    setTimeout(() => introduceAnimal(animals[state.animalIndex]), 250); return;
   }
-  if (target.dataset.sound !== undefined) { playAnimalSound(animals[state.animalIndex]); speakAnimal(animals[state.animalIndex]); return; }
-  if (target.dataset.letter !== undefined) { const [letter,name]=alphabet[+target.dataset.letter]; speak(letter + '. ' + name + '.'); return; }
-  if (target.dataset.song !== undefined) { const song=songs[+target.dataset.song]; song.lines.forEach((line,i)=>setTimeout(()=>speak(line),i*2600)); burst(); return; }
+  if (target.dataset.sound !== undefined) { introduceAnimal(animals[state.animalIndex]); return; }
+  if (target.dataset.letter !== undefined) { const [letter,name]=alphabet[+target.dataset.letter]; speakWithPauses([`Ready? ${letter} is for ${name}!`, `${letter}. ${name}.`]); return; }
+  if (target.dataset.song !== undefined) { const song=songs[+target.dataset.song]; speakWithPauses(['Ready? Here we go!', ...song.lines], 450); burst(); return; }
   if (target.dataset.countObject !== undefined) { const n = +target.dataset.countObject + 1; playGameSound('count'); speak(String(n)); return; }
-  if (target.dataset.newCount !== undefined) { state.countingTarget=1+Math.floor(Math.random()*10); state.countAnswer=null; render(); setTimeout(() => speak(String(state.countingTarget)), 150); return; }
+  if (target.dataset.newCount !== undefined) { state.countingTarget=1+Math.floor(Math.random()*10); state.countAnswer=null; render(); setTimeout(() => speakWithPauses(['Ready? Here we go!', `Let’s count together. ${state.countingTarget}!`]), 150); return; }
   if (target.dataset.speakCount !== undefined) { playGameSound('count'); speak(String(state.countingTarget)); return; }
   if (target.dataset.next !== undefined) {
     state.animalIndex = (state.animalIndex + 1) % animals.length; render();
-    setTimeout(() => speakAnimal(animals[state.animalIndex]), 150); return;
+    setTimeout(() => introduceAnimal(animals[state.animalIndex]), 150); return;
   }
 
-  if (target.dataset.hint !== undefined) { speakAnimal(state.question.correct); return; }
+  if (target.dataset.hint !== undefined) { speakWithPauses([`Here is a clue! It is a ${state.question.correct.name}.`, state.question.correct.fact]); return; }
 
   if (target.dataset.answer) {
     const feedback = document.querySelector('#feedback');
@@ -251,11 +304,11 @@ app.addEventListener('click', event => {
     if (target.dataset.answer === state.question.correct.name) {
       state.answered = true; state.score++;
       target.classList.add('correct');
-      feedback.innerHTML = '🎉 <b>Great job!</b> You found the ' + state.question.correct.name + '! <button class="primary small" data-continue>Next one →</button>';
-      burst(); speak('Great job! You found the ' + state.question.correct.name);
+      feedback.innerHTML = '🎉 <b>Woo-hoo! You got it!</b> That is the ' + state.question.correct.name + '! <button class="primary small" data-continue>Next one →</button>';
+      burst(); playGameSound('correct'); speakWithPauses(['Woo-hoo! You got it!', `That is the ${state.question.correct.name}!`]);
     } else {
-      target.classList.add('wrong'); feedback.innerHTML = '💛 <b>Try again!</b> Listen to the clue and choose another friend!';
-      playGameSound('wrong'); speak('Try again!');
+      target.classList.add('wrong'); feedback.innerHTML = '💛 <b>Oops! Almost!</b> Let’s try again! Listen to the clue and choose another friend.';
+      playGameSound('wrong'); speak('Oops! Almost! Let’s try again!');
       setTimeout(() => target.classList.remove('wrong'), 500);
     }
     return;
@@ -263,19 +316,19 @@ app.addEventListener('click', event => {
 
   if (target.dataset.continue !== undefined) { newQuestion(); render(); return; }
 
-  if (target.dataset.game === 'count') { state.countingTarget = 3 + Math.floor(Math.random() * 7); state.countAnswer = null; state.view = 'count'; render(); setTimeout(() => speak(String(state.countingTarget)), 150); return; }
+  if (target.dataset.game === 'count') { state.countingTarget = 3 + Math.floor(Math.random() * 7); state.countAnswer = null; state.view = 'count'; render(); setTimeout(() => speakWithPauses(['Let’s count together!', `Ready? Here we go! There are ${state.countingTarget}.`]), 150); return; }
   if (target.dataset.game === 'memory') { startMemory(); render(); return; }
 
   if (target.dataset.count) {
     const n = +target.dataset.count;
     const feedback = document.querySelector('#count-feedback');
     if (n === state.countingTarget) {
-      state.score++; state.countAnswer = '🎉 Great job! You counted them correctly!';
-      burst(); playGameSound('correct'); speak('Great job! You counted them correctly!');
+      state.score++; state.countAnswer = '🎉 Woo-hoo! Great job! You counted them all!';
+      burst(); playGameSound('correct'); speak('Woo-hoo! Great job! You counted them all!');
       render();
     } else {
-      state.countAnswer = '💛 Not quite! Try again.';
-      playGameSound('wrong'); speak('Not quite. Try again!');
+      state.countAnswer = '💛 Almost! Let’s count them together!';
+      playGameSound('wrong'); speak('Almost! Let’s count them together!');
       feedback.textContent = state.countAnswer;
     }
     return;
@@ -293,13 +346,17 @@ app.addEventListener('click', event => {
       const [a,b] = state.memoryFlipped.map(x => state.memoryCards.find(c => c.id === x));
       if (a.name === b.name) {
         a.matched = b.matched = true; state.memoryMatched++; state.memoryFlipped = [];
-        state.score++; burst(); playGameSound('correct'); speak('Great job! Match!');
+        state.score++; burst(); playGameSound('correct'); speak('Amazing! You found a matching pair!');
         setTimeout(render, 450);
       } else {
+        playGameSound('wrong'); speak('Oops! Almost! Let’s try again!');
         setTimeout(() => { state.memoryFlipped = []; render(); }, 750);
       }
     }
   }
 });
+
+choosePlayfulVoice();
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = choosePlayfulVoice;
 
 render();
