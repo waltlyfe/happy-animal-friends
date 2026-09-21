@@ -76,13 +76,15 @@ function speakWithPauses(lines, pause = 350) {
 function introduceAnimal(animal) {
   if (!state.soundOn) return;
   stopSpeaking();
-  speak(`Wow! It is a ${animal.name}!`, {
-    interrupt: false,
-    onend: () => {
-      playAnimalSound(animal);
-      speechTimer = setTimeout(() => speak(animal.fact, { interrupt: false }), 950);
-    }
-  });
+  const canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+  // Start the animal sound separately so it is never blocked by unavailable or stalled speech.
+  if (canSpeak) speak(`Wow! It is a ${animal.name}!`, { interrupt: false });
+  playAnimalSound(animal);
+
+  if (canSpeak) {
+    speechTimer = setTimeout(() => speak(animal.fact, { interrupt: false }), 950);
+  }
 }
 
 
