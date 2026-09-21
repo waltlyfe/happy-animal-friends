@@ -35,6 +35,32 @@ function speak(text) {
 
 function speakAnimal(animal) { speak(`${animal.name}. ${animal.phrase} ${animal.fact}`); }
 
+function playToneSequence(notes, duration = 0.11) {
+  if (!state.soundOn) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  const ctx = new Ctx(), now = ctx.currentTime;
+  notes.forEach((frequency, i) => {
+    const start = now + i * duration;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.16, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(start); osc.stop(start + duration + 0.02);
+  });
+  setTimeout(() => ctx.close(), Math.max(700, notes.length * duration * 1000 + 150));
+}
+
+function playGameSound(kind) {
+  if (kind === 'correct') playToneSequence([523.25, 659.25, 783.99], 0.12);
+  if (kind === 'wrong') playToneSequence([220, 185], 0.16);
+  if (kind === 'count') playToneSequence([392, 523.25], 0.1);
+}
+
 function playAnimalSound(animal) {
   if (!state.soundOn) return;
   const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -150,12 +176,12 @@ function games() {
 function countGame() {
   const target = state.countingTarget;
   const animal = animals[target % animals.length];
-  const choices = [target, target === 3 ? 5 : 3, target === 6 ? 8 : 7].sort(() => Math.random() - .5);
+  const choices = [target, ...[1,2,3,4,5,6,7,8,9,10].filter(n => n !== target).sort(() => Math.random() - .5).slice(0, 2)].sort(() => Math.random() - .5);
   return `${nav()}<section class="mini-game">
     <button class="back" data-view="games">← Games</button><div class="game-box">
       <p class="eyebrow">Counting game</p><h1>How many ${animal.name}s?</h1>
       <div class="count-row">${Array.from({length: target}, () => `<span>${animal.emoji}</span>`).join('')}</div>
-      <p class="question">Count them and pick the number!</p>
+      <p class="question">Count them and pick the number!</p><button class="hint-button" data-speak-count>🔊 Hear the number</button>
       <div class="number-choices">${choices.map(n => `<button data-count="${n}">${n}</button>`).join('')}</div>
       <div id="count-feedback" class="feedback">${state.countAnswer || ''}</div>
     </div>
@@ -209,8 +235,9 @@ app.addEventListener('click', event => {
   if (target.dataset.sound !== undefined) { playAnimalSound(animals[state.animalIndex]); speakAnimal(animals[state.animalIndex]); return; }
   if (target.dataset.letter !== undefined) { const [letter,name]=alphabet[+target.dataset.letter]; speak(letter + '. ' + name + '.'); return; }
   if (target.dataset.song !== undefined) { const song=songs[+target.dataset.song]; song.lines.forEach((line,i)=>setTimeout(()=>speak(line),i*2600)); burst(); return; }
-  if (target.dataset.countObject !== undefined) { speak(String(+target.dataset.countObject+1)); return; }
-  if (target.dataset.newCount !== undefined) { state.countingTarget=1+Math.floor(Math.random()*10); state.countAnswer=null; render(); return; }
+  if (target.dataset.countObject !== undefined) { const n = +target.dataset.countObject + 1; playGameSound('count'); speak(String(n)); return; }
+  if (target.dataset.newCount !== undefined) { state.countingTarget=1+Math.floor(Math.random()*10); state.countAnswer=null; render(); setTimeout(() => speak(String(state.countingTarget)), 150); return; }
+  if (target.dataset.speakCount !== undefined) { playGameSound('count'); speak(String(state.countingTarget)); return; }
   if (target.dataset.next !== undefined) {
     state.animalIndex = (state.animalIndex + 1) % animals.length; render();
     setTimeout(() => speakAnimal(animals[state.animalIndex]), 150); return;
@@ -227,7 +254,8 @@ app.addEventListener('click', event => {
       feedback.innerHTML = '🎉 <b>Great job!</b> You found the ' + state.question.correct.name + '! <button class="primary small" data-continue>Next one →</button>';
       burst(); speak('Great job! You found the ' + state.question.correct.name);
     } else {
-      target.classList.add('wrong'); feedback.innerHTML = '💛 <b>Nice try!</b> Listen to the clue and try another friend!';
+      target.classList.add('wrong'); feedback.innerHTML = '💛 <b>Try again!</b> Listen to the clue and choose another friend!';
+      playGameSound('wrong'); speak('Try again!');
       setTimeout(() => target.classList.remove('wrong'), 500);
     }
     return;
@@ -235,18 +263,19 @@ app.addEventListener('click', event => {
 
   if (target.dataset.continue !== undefined) { newQuestion(); render(); return; }
 
-  if (target.dataset.game === 'count') { state.countingTarget = 3 + Math.floor(Math.random() * 7); state.countAnswer = null; state.view = 'count'; render(); return; }
+  if (target.dataset.game === 'count') { state.countingTarget = 3 + Math.floor(Math.random() * 7); state.countAnswer = null; state.view = 'count'; render(); setTimeout(() => speak(String(state.countingTarget)), 150); return; }
   if (target.dataset.game === 'memory') { startMemory(); render(); return; }
 
   if (target.dataset.count) {
     const n = +target.dataset.count;
     const feedback = document.querySelector('#count-feedback');
     if (n === state.countingTarget) {
-      state.score++; state.countAnswer = '🎉 Great counting! You got it!';
-      burst(); speak('Great counting!');
+      state.score++; state.countAnswer = '🎉 Great job! You counted them correctly!';
+      burst(); playGameSound('correct'); speak('Great job! You counted them correctly!');
       render();
     } else {
-      state.countAnswer = '💛 Almost! Count each animal one more time.';
+      state.countAnswer = '💛 Not quite! Try again.';
+      playGameSound('wrong'); speak('Not quite. Try again!');
       feedback.textContent = state.countAnswer;
     }
     return;
@@ -264,7 +293,7 @@ app.addEventListener('click', event => {
       const [a,b] = state.memoryFlipped.map(x => state.memoryCards.find(c => c.id === x));
       if (a.name === b.name) {
         a.matched = b.matched = true; state.memoryMatched++; state.memoryFlipped = [];
-        state.score++; burst(); speak('Match!');
+        state.score++; burst(); playGameSound('correct'); speak('Great job! Match!');
         setTimeout(render, 450);
       } else {
         setTimeout(() => { state.memoryFlipped = []; render(); }, 750);
