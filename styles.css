@@ -3,3 +3,56 @@
 .sound-toggle{min-width:42px;padding:10px 12px!important}.animal-card small{font-size:12px;font-weight:900;opacity:.72}.game-card{background:#ffe3b5}.secondary{background:#eef1f7;padding:12px 18px;border-radius:15px;font-weight:900;margin-top:23px}.fact-pill{background:#eef8f3;border-radius:14px;padding:10px 14px;font-size:14px;font-weight:800;color:#52667b}.detail-actions{display:flex;gap:10px;align-items:center}.hint-button{background:#fff3c4;border-radius:999px;padding:9px 15px;font-weight:900;margin-bottom:14px}.score small{display:block;font-size:10px;font-weight:900;color:#6d7384}.games-page,.mini-game{max-width:1050px;margin:20px auto;padding:0 25px 60px}.game-menu{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.game-tile{background:white;border-radius:28px;padding:28px;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:5px;transition:.2s}.game-tile:hover{transform:translateY(-5px)}.game-tile span{font-size:55px}.game-tile strong{font-family:'Baloo 2';font-size:25px}.game-tile small{font-weight:800;color:#68758c}.game-tip{margin-top:22px;background:#fff0ad;border-radius:18px;padding:16px;font-weight:800}.game-box{background:white;border-radius:34px;padding:30px;text-align:center;box-shadow:var(--shadow)}.game-box h1{font-family:'Baloo 2';font-size:48px;margin:0 0 8px}.count-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:650px;margin:22px auto}.count-row span{font-size:65px;animation:bob 2.4s ease-in-out infinite}.number-choices{display:flex;justify-content:center;gap:14px}.number-choices button{width:75px;height:65px;background:#ddd2ff;border-radius:18px;font-size:28px;font-weight:900;box-shadow:0 4px 0 #b6a6e8}.number-choices button:hover{transform:translateY(-3px)}.memory-grid{max-width:720px;margin:22px auto;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.memory-card{min-height:130px;border-radius:20px;background:#d9d0ff;box-shadow:0 5px 0 #b8a9df;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:.15s}.memory-card:hover{transform:translateY(-3px)}.memory-card span{font-size:58px}.memory-card small{font-weight:900}.memory-card.flipped{background:#cdf4eb}.memory-card.matched{background:#c9f4d5;box-shadow:0 5px 0 #91d6a2}.win-banner{background:#fff0ad;border-radius:20px;padding:18px;font-weight:900}.win-banner .small{margin-left:12px}.confetti i{font-style:normal}@media(max-width:700px){nav{gap:4px}nav button{padding:8px 8px!important}.game-menu{grid-template-columns:1fr}.games-page,.mini-game{padding:0 15px 45px}.game-box{padding:22px 14px}.game-box h1{font-size:38px}.count-row span{font-size:48px}.number-choices button{width:62px}.memory-grid{grid-template-columns:repeat(3,1fr);gap:8px}.memory-card{min-height:105px}.memory-card span{font-size:44px}.detail-actions{flex-wrap:wrap}.secondary{margin-top:23px}.sound-toggle{font-size:14px!important}.page-heading{gap:10px}}
 
 .alphabet-grid{max-width:1100px;margin:0 auto;padding:0 25px 60px;display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.letter-card{background:white;border-radius:22px;padding:15px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:2px;transition:.18s}.letter-card:hover{transform:translateY(-5px);background:#fff5c8}.letter-card b{font-family:'Baloo 2';font-size:38px;color:#7c5ce0}.letter-card span{font-size:48px}.letter-card strong{font-family:'Baloo 2';font-size:20px}.letter-card small{font-size:11px;font-weight:900;color:#7a8498}.song-grid{max-width:1050px;margin:0 auto;padding:0 25px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.song-card{background:white;border-radius:28px;padding:24px;box-shadow:var(--shadow);text-align:center}.song-emoji{font-size:58px}.song-card h2{font-family:'Baloo 2';font-size:28px;margin:5px 0}.song-card p{font-weight:800;color:#69758e;line-height:1.5;min-height:100px}.count-sub{font-size:20px;font-weight:900;color:#66738a}.big-count{max-width:800px}.count-object{background:transparent;font-size:62px;transition:.15s}.count-object:hover{transform:scale(1.12)}.song-card-home{background:#ffd8a8}.abc-card-home{background:#cfe3ff}.game-menu{grid-template-columns:repeat(4,1fr)}@media(max-width:900px){.alphabet-grid{grid-template-columns:repeat(4,1fr)}.song-grid{grid-template-columns:1fr 1fr}.game-menu{grid-template-columns:1fr 1fr}}@media(max-width:700px){.alphabet-grid{padding:0 15px 45px;grid-template-columns:repeat(3,1fr);gap:9px}.letter-card{padding:10px}.letter-card b{font-size:30px}.letter-card span{font-size:38px}.letter-card strong{font-size:16px}.song-grid{grid-template-columns:1fr;padding:0 15px}.song-card p{min-height:auto}.game-menu{grid-template-columns:1fr}.big-count{gap:2px}.count-object{font-size:45px}.topbar nav{overflow-x:auto;max-width:72vw}}
+
+/* Happy Animal Friends video section */
+.video-section {
+  max-width: 900px;
+  margin: 45px auto;
+  padding: 35px;
+  text-align: center;
+  background: #fff4c7;
+  border-radius: 32px;
+}
+
+.video-section h2 {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.video-section > p {
+  font-size: 17px;
+  margin-bottom: 25px;
+}
+
+.video-card {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 30px;
+  background: white;
+  border-radius: 26px;
+  box-shadow: 0 10px 0 rgba(47, 68, 107, 0.12);
+}
+
+.video-placeholder {
+  font-size: 55px;
+  padding: 25px;
+  margin-bottom: 15px;
+  background: #c9f3ea;
+  border-radius: 22px;
+}
+
+.video-card h3 {
+  font-size: 24px;
+  margin: 10px 0;
+}
+
+.video-card p {
+  margin-bottom: 22px;
+}
+
+.video-card a.primary {
+  display: inline-block;
+  padding: 14px 25px;
+  text-decoration: none;
+  border-radius: 16px;
+}
