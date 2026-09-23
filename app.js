@@ -167,6 +167,19 @@ function home() {
         <button class="activity quiz-card" data-view="quiz"><span class="activity-emoji">🦁</span><strong>Guess the Animal</strong><small>Can you find the right friend?</small><b>Play now →</b></button>
         <button class="activity game-card" data-view="games"><span class="activity-emoji">🎮</span><strong>Play & Count</strong><small>Try fun learning games!</small><b>Let's play →</b></button><button class="activity song-card-home" data-view="songs"><span class="activity-emoji">🎵</span><strong>Sing Animal Songs</strong><small>Clap, sing, and learn!</small><b>Sing now →</b></button><button class="activity abc-card-home" data-view="abc"><span class="activity-emoji">🔤</span><strong>ABC Animal Friends</strong><small>Learn A to Z with animals!</small><b>Learn letters →</b></button>
       </div>
+      <section class="video-section">
+  <h2>🎬 Watch Happy Animal Friends</h2>
+  <p>Sing, learn, and have fun with our animal friends!</p>
+
+  <div class="video-card">
+    <div class="video-placeholder">🐮 🐶 🐱 🐷</div>
+    <h3>Happy Animal Friends Videos</h3>
+    <p>Fun animal songs, sounds, ABCs, counting, and learning adventures.</p>
+    <a class="primary" href="#" aria-label="Watch Happy Animal Friends videos">
+      ▶ Watch Videos
+    </a>
+  </div>
+</section>
     </section>`;
 }
 
