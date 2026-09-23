@@ -175,8 +175,8 @@ function home() {
     <div class="video-placeholder">🐮 🐶 🐱 🐷</div>
     <h3>Happy Animal Friends Videos</h3>
     <p>Fun animal songs, sounds, ABCs, counting, and learning adventures.</p>
-    <a class="primary" href="https://www.youtube.com/@HappyAnimalFriends-m7c" aria-label="Watch Happy Animal Friends videos">
-      ▶ Watch Videos
+    <a class="primary" href="#" aria-label="Watch Happy Animal Friends videos">
+     ▶ Add Your Videos
     </a>
   </div>
 </section>
