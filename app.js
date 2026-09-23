@@ -168,7 +168,7 @@ function home() {
         <button class="activity game-card" data-view="games"><span class="activity-emoji">🎮</span><strong>Play & Count</strong><small>Try fun learning games!</small><b>Let's play →</b></button><button class="activity song-card-home" data-view="songs"><span class="activity-emoji">🎵</span><strong>Sing Animal Songs</strong><small>Clap, sing, and learn!</small><b>Sing now →</b></button><button class="activity abc-card-home" data-view="abc"><span class="activity-emoji">🔤</span><strong>ABC Animal Friends</strong><small>Learn A to Z with animals!</small><b>Learn letters →</b></button>
       </div>
       <section class="video-section">
-  <h2>🎬 Watch Happy Animal Friends</h2>
+  <h2>🎬Educational Video Center</h2>
   <p>Sing, learn, and have fun with our animal friends!</p>
 
   <div class="video-card">
